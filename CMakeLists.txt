@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 4.0)
 project(micro_exchange LANGUAGES CXX)
 
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # --- Common warnings (interface library) ---
 add_library(project_warnings INTERFACE)
-target_compile_features(project_warnings INTERFACE cxx_std_20)
+target_compile_features(project_warnings INTERFACE cxx_std_23)
 target_compile_options(project_warnings INTERFACE
     -Wall -Wextra -Werror -Wpedantic -Wconversion
 )
@@ -30,6 +32,7 @@ add_library(micro_exchange_core INTERFACE
   # src/orderbook/orderbook.cpp, and so on
 )
 target_include_directories(micro_exchange_core INTERFACE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(micro_exchange_core INTERFACE project_warnings project_options)
 
 # --- Main executable ---
 add_executable(micro_exchange src/main.cpp)

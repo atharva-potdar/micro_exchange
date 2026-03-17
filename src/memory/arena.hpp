@@ -38,7 +38,7 @@ public:
     T *result = free_head;
     std::memcpy(&free_head, static_cast<void*>(result), sizeof(T *));
     allocated++;
-    return new (result) T{std::forward<Args>(args)...};
+    return new (result) T(std::forward<Args>(args)...);
   }
 
   void deallocate(T *ptr) {
@@ -48,7 +48,7 @@ public:
 
     std::byte* byte_ptr = reinterpret_cast<std::byte*>(ptr);
     assert(byte_ptr >= storage && byte_ptr < storage + (Capacity * sizeof(T)) && "Pointer does not belong to this Arena");
-    assert((byte_ptr - storage) % sizeof(T) == 0 && "Pointer is not aligned to Arena boundaries");
+    assert(static_cast<size_t>(byte_ptr - storage) % sizeof(T) == 0 && "Pointer is not aligned to Arena boundaries");
     assert(allocated > 0 && "Arena allocated count underflow");
 
     ptr->~T();
