@@ -103,6 +103,7 @@ struct PriceLevel {
       remove(o);
     } else {
       total_quantity -= (o->quantity - new_quantity);
+      o->quantity = new_quantity;
     }
   }
 };
