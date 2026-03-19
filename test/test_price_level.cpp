@@ -1,15 +1,16 @@
+#include <gtest/gtest.h>
+
 #include "memory/arena.hpp"
 #include "orderbook/types.hpp"
-#include <gtest/gtest.h>
 
 TEST(PriceLevel, PushThreeOrdersVerifyFront) {
   Arena<Order, 64> arena;
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -26,9 +27,9 @@ TEST(PriceLevel, RemoveMiddle) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -47,9 +48,9 @@ TEST(PriceLevel, RemoveHead) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -67,9 +68,9 @@ TEST(PriceLevel, RemoveTail) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -87,7 +88,7 @@ TEST(PriceLevel, RemoveLastOrder) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.remove(a);
@@ -104,9 +105,9 @@ TEST(PriceLevel, QuantityTracking) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -124,7 +125,7 @@ TEST(PriceLevel, ZeroQuantityGuard) {
   PriceLevel level;
   level.price = 100;
 
-  Order *o = order_pool.allocate(1ULL, 100ULL, 0U, Side::Buy, nullptr, nullptr);
+  Order* o = order_pool.allocate(1ULL, 100ULL, 0U, Side::Buy, nullptr, nullptr);
 
   ASSERT_DEATH(level.push_back(o), "Cannot push an order with 0 quantity")
       << "Should assert on zero quantity.";
@@ -135,7 +136,7 @@ TEST(PriceLevel, PriceMismatchGuard) {
   PriceLevel level;
   level.price = 100;
 
-  Order *o =
+  Order* o =
       order_pool.allocate(1ULL, 999ULL, 10U, Side::Buy, nullptr, nullptr);
 
   ASSERT_DEATH(level.push_back(o),
@@ -148,9 +149,9 @@ TEST(PriceLevel, FIFOIntegrity) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
@@ -172,9 +173,9 @@ TEST(PriceLevel, TailVerification) {
   PriceLevel p;
   p.price = 100;
 
-  Order *a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
-  Order *b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
-  Order *c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
+  Order* a = arena.allocate(1ULL, 100ULL, 10U, Side::Buy, nullptr, nullptr);
+  Order* b = arena.allocate(2ULL, 100ULL, 20U, Side::Buy, nullptr, nullptr);
+  Order* c = arena.allocate(3ULL, 100ULL, 30U, Side::Buy, nullptr, nullptr);
 
   p.push_back(a);
   p.push_back(b);
