@@ -15,6 +15,11 @@ enum class Error : uint8_t {
   PoolExhausted
 };
 
+struct LevelInfo {
+  uint64_t price = 0;
+  uint64_t quantity = 0;
+};
+
 struct Order {
   uint64_t id = 0;
   uint64_t price = 0;
