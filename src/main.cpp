@@ -1,6 +1,3 @@
-// src/main.cpp
-// High-performance benchmark generator for micro_exchange
-
 #include <array>
 #include <chrono>
 #include <cstdint>
@@ -9,13 +6,11 @@
 
 #include "orderbook/orderbook.hpp"
 
-// [Compiler Barrier]
 template <class T>
 __attribute__((always_inline)) inline void do_not_optimize(T const& val) {
   asm volatile("" : : "r,m"(val) : "memory");
 }
 
-// [PRNG]
 struct XorShift64 {
   uint64_t s;
   constexpr explicit XorShift64(uint64_t seed) : s{seed == 0 ? 1 : seed} {}
@@ -27,19 +22,15 @@ struct XorShift64 {
   }
 };
 
-// [Fast Math]
 inline uint32_t fast_range32(uint64_t random_val, uint32_t range) {
   return static_cast<uint32_t>(
       (static_cast<uint64_t>(static_cast<uint32_t>(random_val)) * range) >> 32);
 }
 
-// [Global Engine Configuration]
 constexpr size_t MAX_ORDERS = 4'000'000;
 constexpr size_t MAX_LEVELS = 50'000;
 static OrderBook<MAX_ORDERS, MAX_LEVELS> book;
 
-// [Optimized Order Tracking]
-// 4096 elements * 24 bytes
 struct TrackedOrder {
   uint64_t id;
   uint64_t price;
@@ -58,13 +49,11 @@ inline void track_order(uint64_t id, uint64_t price, uint32_t qty) {
   ring_head = (ring_head + 1) & RING_MASK;
 }
 
-// Pick ONE order. No retry loops. No probing the 32MB engine arrays.
 inline TrackedOrder* get_random_target(XorShift64& rng) {
   uint32_t idx = static_cast<uint32_t>(rng.next()) & RING_MASK;
   return &order_ring[idx];
 }
 
-// [ID Management]
 uint64_t next_id = 1;
 
 inline uint64_t alloc_id() {
@@ -75,7 +64,6 @@ inline uint64_t alloc_id() {
   return id;
 }
 
-//[Engine Operations]
 void do_add(XorShift64& rng, uint64_t mid, uint64_t spread) {
   uint64_t id = alloc_id();
   uint32_t qty = 1 + fast_range32(rng.next(), 100);
@@ -85,10 +73,10 @@ void do_add(XorShift64& rng, uint64_t mid, uint64_t spread) {
                     fast_range32(rng.next(), half_spread);
   uint64_t price;
 
-  if (rng.next() & 1) {  // Buy
+  if (rng.next() & 1) {
     price = mid > offset ? mid - offset : 1;
     (void)book.add_order<Side::Buy>(id, price, qty);
-  } else {  // Sell
+  } else {
     price = mid + offset;
     (void)book.add_order<Side::Sell>(id, price, qty);
   }
@@ -98,7 +86,6 @@ void do_add(XorShift64& rng, uint64_t mid, uint64_t spread) {
 void do_cancel(XorShift64& rng) {
   TrackedOrder* target = get_random_target(rng);
   if (target->id) {
-    // Engine's native error handling is faster than us double-checking
     (void)book.cancel_order(target->id);
     target->id = 0;
   }
@@ -128,9 +115,9 @@ void do_modify(XorShift64& rng, uint64_t mid, uint64_t spread) {
                       fast_range32(rng.next(), half_spread);
     uint64_t new_price;
 
-    if (target->price <= mid) {  // Treat as Buy side
+    if (target->price <= mid) {
       new_price = mid > offset ? mid - offset : 1;
-    } else {  // Treat as Sell side
+    } else {
       new_price = mid + offset;
     }
 
@@ -144,13 +131,13 @@ void do_execute(XorShift64& rng) {
   uint64_t id = alloc_id();
   uint32_t qty = 1 + fast_range32(rng.next(), 20);
 
-  if (rng.next() & 1) {  // Buy Execute
+  if (rng.next() & 1) {
     auto best = book.get_best_ask();
     if (!best) return;
     uint64_t exec_price = best->price + 2;
     (void)book.execute_order<Side::Buy>(id, exec_price, qty);
     track_order(id, exec_price, qty);
-  } else {  // Sell Execute
+  } else {
     auto best = book.get_best_bid();
     if (!best) return;
     uint64_t exec_price = best->price > 2 ? best->price - 2 : 1;

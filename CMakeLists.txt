@@ -55,6 +55,7 @@ endif()
 
 # --- Benchmarks ---
 file(GLOB BENCH_SOURCES CONFIGURE_DEPENDS bench/bench_*.cpp)
+list(REMOVE_ITEM BENCH_SOURCES ${CMAKE_SOURCE_DIR}/bench/bench_latency.cpp)
 if(BENCH_SOURCES)
   find_package(benchmark REQUIRED)
   foreach(src IN LISTS BENCH_SOURCES)
@@ -64,3 +65,5 @@ if(BENCH_SOURCES)
     target_link_libraries(${name} PRIVATE micro_exchange_core benchmark::benchmark_main)
   endforeach()
 endif()
+add_executable(bench_latency bench/bench_latency.cpp)
+target_link_libraries(bench_latency PRIVATE micro_exchange_core)

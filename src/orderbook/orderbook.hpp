@@ -25,10 +25,6 @@ class OrderBook {
   // log2(n) misprediction cost. 16 pointers = 128 bytes = 2 cache lines.
   static constexpr size_t kLinearScanThreshold = 16;
 
-  // Shared search kernel used by both find_or_create_level and
-  // remove_empty_level. Returns {existing_level_or_nullptr, insertion_index}.
-  // When the level is found, first = the level and second = its index.
-  // When not found, first = nullptr and second = where it would be inserted.
   template <Side S>
   [[nodiscard]] std::pair<PriceLevel*, size_t> find_level_or_pos(
       uint64_t price) const {
@@ -38,7 +34,6 @@ class OrderBook {
     if (count == 0) return {nullptr, 0};
 
     if (count <= kLinearScanThreshold) {
-      // Linear scan: predictable sequential branches, no misprediction cost.
       // Buy levels are sorted descending; ask levels ascending.
       for (size_t i = 0; i < count; ++i) {
         uint64_t lp = levels[i]->price;
@@ -53,7 +48,6 @@ class OrderBook {
       return {nullptr, count};
     }
 
-    // Binary search for larger level counts.
     size_t L = 0, R = count - 1;
     while (L <= R) {
       size_t mid = L + ((R - L) / 2);
@@ -74,9 +68,6 @@ class OrderBook {
     return {nullptr, L};
   }
 
-  // Removes a known-empty level from the sorted pointer array.
-  // Called only when level->empty() is true, which is [[unlikely]] — most
-  // cancels remove one order from a multi-order level.
   template <Side S>
   void remove_empty_level(uint64_t price) {
     auto& level_array = (S == Side::Buy) ? bid_levels : ask_levels;
@@ -99,7 +90,7 @@ class OrderBook {
     uint64_t id = o->id;
     level->remove(o);
     // Most cancels leave other orders at this level. Level destruction is
-    // genuinely uncommon in a live book; [[unlikely]] is correct here.
+    // genuinely uncommon in a live book.
     if (level->empty()) [[unlikely]] {
       remove_empty_level<S>(price);
       level_pool.deallocate(level);
@@ -148,7 +139,6 @@ class OrderBook {
     auto [existing, pos] = find_level_or_pos<S>(price);
     if (existing) return existing;
 
-    // Shift everything right to make room at pos, then insert.
     if (pos < count) {
       std::memmove(&levels[pos + 1], &levels[pos],
                    (count - pos) * sizeof(PriceLevel*));
@@ -203,7 +193,7 @@ class OrderBook {
     if (new_quantity == 0) [[unlikely]]
       return cancel_order(id);
     Order* o = order_lookup[id];
-    // Fast path: same price, quantity decreasing. In-place update, no
+    // Fast path: same price, quantity decreasing — in-place update, no
     // structural change to any level or the sorted arrays.
     if (new_price == o->price && new_quantity <= o->quantity) [[likely]] {
       o->level->total_quantity -= (o->quantity - new_quantity);
