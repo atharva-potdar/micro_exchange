@@ -21,3 +21,20 @@ bench: build-release
 
 clean:
     rm -rf build
+
+profile-perf: build-release
+    @echo "\n--- Hardware Profiling: Main Engine ---"
+    sudo perf stat \
+        -r 3 \
+        -e cycles,instructions \
+        -e branches,branch-misses \
+        -e cache-references,cache-misses \
+        -e L1-dcache-loads,L1-dcache-load-misses,L1-dcache-stores \
+        -e L1-icache-loads,L1-icache-load-misses \
+        -e LLC-loads,LLC-load-misses,LLC-stores,LLC-store-misses \
+        -e dTLB-loads,dTLB-load-misses,dTLB-stores,dTLB-store-misses \
+        -e iTLB-loads,iTLB-load-misses \
+        -e cpu-migrations,context-switches,page-faults \
+        -e stalled-cycles-frontend,stalled-cycles-backend \
+        taskset -c 2 chrt -f 99 \
+        ./build/release/micro_exchange

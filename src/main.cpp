@@ -39,20 +39,22 @@ constexpr size_t MAX_LEVELS = 50'000;
 static OrderBook<MAX_ORDERS, MAX_LEVELS> book;
 
 // [Optimized Order Tracking]
-// 2^18 elements * 24 bytes = ~6.2MB (Fits beautifully in L3 Cache)
+// 4096 elements * 24 bytes
 struct TrackedOrder {
   uint64_t id;
   uint64_t price;
   uint32_t qty;
 };
 
-constexpr size_t RING_SIZE = 262144;
+constexpr size_t RING_SIZE = 4096;
 constexpr size_t RING_MASK = RING_SIZE - 1;
 static std::array<TrackedOrder, RING_SIZE> order_ring{};
 size_t ring_head = 0;
 
 inline void track_order(uint64_t id, uint64_t price, uint32_t qty) {
-  order_ring[ring_head] = {id, price, qty};
+  TrackedOrder& slot = order_ring[ring_head];
+  if (slot.id) (void)book.cancel_order(slot.id);
+  slot = {id, price, qty};
   ring_head = (ring_head + 1) & RING_MASK;
 }
 
@@ -63,17 +65,12 @@ inline TrackedOrder* get_random_target(XorShift64& rng) {
 }
 
 // [ID Management]
-bool has_wrapped = false;
 uint64_t next_id = 1;
 
 inline uint64_t alloc_id() {
   uint64_t id = next_id++;
   if (next_id >= MAX_ORDERS) {
     next_id = 1;
-    has_wrapped = true;
-  }
-  if (has_wrapped) {
-    (void)book.cancel_order(id);
   }
   return id;
 }
@@ -162,23 +159,23 @@ void do_execute(XorShift64& rng) {
   }
 }
 
-inline uint8_t pick_op(XorShift64& rng, const uint8_t weights[5]) {
-  uint32_t r = fast_range32(rng.next(), 100);
-  for (uint8_t i = 0; i < 5; ++i) {
-    if (r < weights[i]) return i;
+void build_dispatch(uint8_t (&dispatch)[100], const uint8_t weights[5]) {
+  uint8_t op = 0;
+  for (int i = 0; i < 100; ++i) {
+    while (op < 4 && i >= weights[op]) ++op;
+    dispatch[i] = op;
   }
-  return 4;
 }
 
 uint64_t total_trades_global = 0;
 
-void run_phase(const char* name, size_t ops, const uint8_t weights[5],
+void run_phase(const char* name, size_t ops, const uint8_t dispatch[100],
                uint64_t mid, uint64_t spread) {
   XorShift64 rng(1337 + ops);
   auto start = std::chrono::high_resolution_clock::now();
 
   for (size_t i = 0; i < ops; ++i) {
-    uint8_t op = pick_op(rng, weights);
+    uint8_t op = dispatch[fast_range32(rng.next(), 100)];
     switch (op) {
       case 0:
         do_add(rng, mid, spread);
@@ -238,10 +235,19 @@ int main() {
 
   std::cout << "Starting benchmark phases...\n";
 
-  run_phase("WARMUP", 500'000, WARMUP_WEIGHTS, 100'000, 2'000);
-  run_phase("QUIET", 10'000'000, QUIET_WEIGHTS, 100'000, 1'000);
-  run_phase("ACTIVE", 25'000'000, ACTIVE_WEIGHTS, 100'000, 1'500);
-  run_phase("VOLATILE", 15'000'000, VOLATILE_WEIGHTS, 100'000, 4'000);
+  uint8_t dispatch[100];
+
+  build_dispatch(dispatch, WARMUP_WEIGHTS);
+  run_phase("WARMUP", 500'000, dispatch, 100'000, 2'000);
+
+  build_dispatch(dispatch, QUIET_WEIGHTS);
+  run_phase("QUIET", 10'000'000, dispatch, 100'000, 1'000);
+
+  build_dispatch(dispatch, ACTIVE_WEIGHTS);
+  run_phase("ACTIVE", 25'000'000, dispatch, 100'000, 1'500);
+
+  build_dispatch(dispatch, VOLATILE_WEIGHTS);
+  run_phase("VOLATILE", 15'000'000, dispatch, 100'000, 4'000);
 
   Trade trades[512];
   while (size_t n = book.drain_trades(trades, 512)) {
