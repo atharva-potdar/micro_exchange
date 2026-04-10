@@ -15,8 +15,8 @@ target_compile_options(project_warnings INTERFACE
 # --- Per-config & SIMD flags ---
 add_library(project_options INTERFACE)
 target_compile_options(project_options INTERFACE
-    $<$<CONFIG:Debug>:-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer>
-    $<$<CONFIG:Release>:-O3 -march=native -flto=thin -g -fno-omit-frame-pointer>
+    $<$<CONFIG:Debug>:-O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-strict-aliasing>
+    $<$<CONFIG:Release>:-O3 -march=native -flto=thin -g -fno-omit-frame-pointer -fno-strict-aliasing>
 )
 target_link_options(project_options INTERFACE
     $<$<CONFIG:Debug>:-fsanitize=address,undefined>
