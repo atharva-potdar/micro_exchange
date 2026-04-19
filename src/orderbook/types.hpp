@@ -57,7 +57,7 @@ struct PriceLevel {
     o->next = nullptr;
     o->prev = tail;
     o->level = this;
-    if (tail) {
+    if (tail != nullptr) {
       tail->next = o;
     } else {
       head = o;
@@ -75,12 +75,12 @@ struct PriceLevel {
     assert((order_count > 1 || total_quantity == o->quantity) &&
            "Quantity mismatch on last order");
 
-    if (o->prev) {
+    if (o->prev != nullptr) {
       o->prev->next = o->next;
     } else {
       head = o->next;
     }
-    if (o->next) {
+    if (o->next != nullptr) {
       o->next->prev = o->prev;
     } else {
       tail = o->prev;

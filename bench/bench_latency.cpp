@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <ctime>
 #include <x86intrin.h>
 
@@ -12,15 +13,17 @@
 
 static auto tsc_to_ns_factor() -> double {
   __rdtsc();
-  struct timespec t0{}, t1{};
+  struct timespec t0{};
+  struct timespec t1{};
   clock_gettime(CLOCK_MONOTONIC, &t0);
   uint64_t c0 = __rdtsc();
   volatile uint64_t sink = 0;
-  for (uint64_t i = 0; i < 10'000'000; ++i) sink += i;
+  for (uint64_t i = 0; i < 10'000'000; ++i) { sink += i;
+}
   uint64_t c1 = __rdtsc();
   clock_gettime(CLOCK_MONOTONIC, &t1);
   double ns =
-      static_cast<double>(t1.tv_sec - t0.tv_sec) * 1e9 + static_cast<double>(t1.tv_nsec - t0.tv_nsec);
+      (static_cast<double>(t1.tv_sec - t0.tv_sec) * 1e9) + static_cast<double>(t1.tv_nsec - t0.tv_nsec);
   auto ticks = static_cast<double>(c1 - c0);
   return ns / ticks;
 }
@@ -31,7 +34,7 @@ static auto rdtsc_overhead() -> uint64_t {
     uint64_t a = __rdtsc();
     uint64_t b = __rdtsc();
     uint64_t d = b - a;
-    if (d < min_overhead) min_overhead = d;
+    min_overhead = std::min(d, min_overhead);
   }
   return min_overhead;
 }
@@ -74,7 +77,8 @@ auto measure(Op&& op, size_t n_samples = 100'000, size_t warmup = 10'000) -> Sta
   };
 
   double sum = 0;
-  for (auto s : samples) sum += static_cast<double>(s);
+  for (auto s : samples) { sum += static_cast<double>(s);
+}
 
   return {
       .mean = (sum / static_cast<double>(n_samples)) * ns_per_tick,
@@ -113,7 +117,8 @@ auto main() -> int {
 
     auto s = measure([&](bool& reset) -> void {
       if (id > RESET_AT) [[unlikely]] {
-        for (uint64_t j = 2; j <= RESET_AT; ++j) book.cancel_order(j);
+        for (uint64_t j = 2; j <= RESET_AT; ++j) { book.cancel_order(j);
+}
         id = 2;
         reset = true;
         return;
@@ -168,13 +173,15 @@ auto main() -> int {
   // alive so remove_empty_level is never triggered.
   {
     OrderBook<4096, 1024> book;
-    for (uint64_t i = 1; i <= 3000; ++i) book.add_order<Side::Buy>(i, 100, 10);
+    for (uint64_t i = 1; i <= 3000; ++i) { book.add_order<Side::Buy>(i, 100, 10);
+}
     uint64_t id = 1;
 
     auto s = measure([&](bool& reset) -> void {
       if (id > 2000) [[unlikely]] {
-        for (uint64_t j = 1; j <= 2000; ++j)
+        for (uint64_t j = 1; j <= 2000; ++j) {
           book.add_order<Side::Buy>(j, 100, 10);
+}
         id = 1;
         reset = true;
         return;
@@ -191,8 +198,9 @@ auto main() -> int {
     constexpr uint64_t N = 500;
     auto setup = [&] -> void {
       book = std::make_unique<OrderBook<4096, 1024>>();
-      for (uint64_t i = 1; i <= N; ++i)
+      for (uint64_t i = 1; i <= N; ++i) {
         book->add_order<Side::Buy>(i, i * 10, 10);
+}
     };
     setup();
     uint64_t id = 1;
@@ -277,8 +285,9 @@ auto main() -> int {
     constexpr uint32_t N = 500;
     auto setup = [&] -> void {
       book = std::make_unique<OrderBook<4096, 1024>>();
-      for (uint32_t i = 0; i < N; ++i)
+      for (uint32_t i = 0; i < N; ++i) {
         book->add_order<Side::Sell>(i + 1, 100 + i, 10);
+}
     };
     setup();
     uint64_t aggressor_id = 10000;

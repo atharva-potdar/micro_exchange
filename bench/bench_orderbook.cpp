@@ -20,7 +20,7 @@ static void BM_AddOrder_ExistingLevel(benchmark::State& state) {
     if (id > 500) [[unlikely]] {
       state.PauseTiming();
       for (uint64_t j = 2; j <= 500; ++j) {
-        if (b.cancel_order(j).has_value() != true) [[unlikely]] {
+        if (!b.cancel_order(j).has_value()) [[unlikely]] {
           state.SkipWithError("Cancel failed during reset");
           return;
         }

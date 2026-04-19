@@ -39,7 +39,7 @@ class ServerSocket {
     }
   }
 
-  auto accept() -> int {
+  auto accept() const -> int {
     int client_fd = ::accept(fd, nullptr, nullptr);  // accept() failed if < 0
 
     int nodelay = 1;

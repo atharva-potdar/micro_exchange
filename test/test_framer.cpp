@@ -71,7 +71,7 @@ TEST(Framer, ParseConcatenatedMessages) {
   m3.qty = 20;
   m3.side = 1;
 
-  std::byte buf[sizeof(WireOrderAdd) * 2 + sizeof(WireOrderCancel)];
+  std::byte buf[(sizeof(WireOrderAdd) * 2) + sizeof(WireOrderCancel)];
   size_t offset = 0;
   offset += serialize(m1, buf + offset);
   offset += serialize(m2, buf + offset);
