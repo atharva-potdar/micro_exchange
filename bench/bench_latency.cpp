@@ -12,7 +12,7 @@
 
 static auto tsc_to_ns_factor() -> double {
   __rdtsc();
-  struct timespec t0, t1;
+  struct timespec t0{}, t1{};
   clock_gettime(CLOCK_MONOTONIC, &t0);
   uint64_t c0 = __rdtsc();
   volatile uint64_t sink = 0;

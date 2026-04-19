@@ -23,7 +23,7 @@ TEST(Framer, FeedOneByteAtATime) {
   Framer framer;
   TestHandler handler;
 
-  WireOrderAdd og;
+  WireOrderAdd og{};
   og.hdr = {.length=sizeof(WireOrderAdd), .type=static_cast<uint8_t>(MessageType::OrderAdd)};
   og.id = 42;
   og.price = 100500;
@@ -52,19 +52,19 @@ TEST(Framer, ParseConcatenatedMessages) {
   Framer framer;
   TestHandler handler;
 
-  WireOrderAdd m1;
+  WireOrderAdd m1{};
   m1.hdr = {.length=sizeof(WireOrderAdd), .type=static_cast<uint8_t>(MessageType::OrderAdd)};
   m1.id = 1;
   m1.price = 100;
   m1.qty = 10;
   m1.side = 1;
 
-  WireOrderCancel m2;
+  WireOrderCancel m2{};
   m2.hdr = {.length=sizeof(WireOrderCancel),
             .type=static_cast<uint8_t>(MessageType::OrderCancel)};
   m2.id = 2;
 
-  WireOrderAdd m3;
+  WireOrderAdd m3{};
   m3.hdr = {.length=sizeof(WireOrderAdd), .type=static_cast<uint8_t>(MessageType::OrderAdd)};
   m3.id = 3;
   m3.price = 200;

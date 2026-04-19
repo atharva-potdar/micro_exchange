@@ -38,7 +38,7 @@ class OrderBook {
       for (size_t i = 0; i < count; ++i) {
         uint64_t lp = levels[i]->price;
         if (lp == price) return {levels[i], i};
-        bool past_insertion_point;
+        bool past_insertion_point = false;
         if constexpr (S == Side::Buy)
           past_insertion_point = (lp < price);
         else
@@ -53,7 +53,7 @@ class OrderBook {
       size_t mid = L + ((R - L) / 2);
       uint64_t mid_price = levels[mid]->price;
       if (mid_price == price) return {levels[mid], mid};
-      bool move_right;
+      bool move_right = false;
       if constexpr (S == Side::Buy)
         move_right = (mid_price > price);
       else

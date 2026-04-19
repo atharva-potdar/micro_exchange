@@ -19,11 +19,11 @@ class Server {
 
   // Scratch buffer for raw recv bytes to hold the largest wire message
   static constexpr size_t kRecvBuf = 4096;
-  std::byte recv_buf_[kRecvBuf];
+  std::byte recv_buf_[kRecvBuf]{};
 
   // Response scratch buffer.
   static constexpr size_t kSendBuf = 4096;
-  std::byte send_buf_[kSendBuf];
+  std::byte send_buf_[kSendBuf]{};
 
   // Sends exactly `len` bytes, retrying on short writes.
   // Returns false if the connection is lost.

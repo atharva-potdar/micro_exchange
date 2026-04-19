@@ -13,16 +13,16 @@ class Arena {
                 "Arena does not auto-destruct active elements on shutdown. T "
                 "must be trivially destructible.");
 
-  alignas(alignof(T)) std::byte storage[Capacity * sizeof(T)];
+  alignas(alignof(T)) std::byte storage[Capacity * sizeof(T)]{};
   T* free_head;
   size_t allocated;
 
  public:
-  Arena() {
-    allocated = 0;
+  Arena() : allocated(0) {
+    
     for (std::size_t i = 0; i < Capacity; i++) {
       T* slot = reinterpret_cast<T*>(&storage[i * sizeof(T)]);
-      T* next;
+      T* next = nullptr;
       if (i + 1 < Capacity) {
         next = reinterpret_cast<T*>(&storage[(i + 1) * sizeof(T)]);
       } else {

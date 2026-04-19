@@ -72,7 +72,7 @@ void do_add(XorShift64& rng, uint64_t mid, uint64_t spread) {
   auto half_spread = static_cast<uint32_t>(spread / 2);
   uint32_t offset = fast_range32(rng.next(), half_spread) +
                     fast_range32(rng.next(), half_spread);
-  uint64_t price;
+  uint64_t price = 0;
 
   if (rng.next() & 1) {
     price = mid > offset ? mid - offset : 1;
@@ -114,7 +114,7 @@ void do_modify(XorShift64& rng, uint64_t mid, uint64_t spread) {
     auto half_spread = static_cast<uint32_t>(spread / 2);
     uint32_t offset = fast_range32(rng.next(), half_spread) +
                       fast_range32(rng.next(), half_spread);
-    uint64_t new_price;
+    uint64_t new_price = 0;
 
     if (target->price <= mid) {
       new_price = mid > offset ? mid - offset : 1;

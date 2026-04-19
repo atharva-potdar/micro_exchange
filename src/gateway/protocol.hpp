@@ -44,7 +44,7 @@ inline auto serialize(const WireOrderAdd& msg, std::byte* buf) -> size_t {
 }
 
 inline auto parse_order_add(const std::byte* buf) -> WireOrderAdd {
-  WireOrderAdd woa;
+  WireOrderAdd woa{};
   size_t offset = 0;
   std::memcpy(&woa.hdr, buf + offset, sizeof(woa.hdr));
   offset += sizeof(woa.hdr);
@@ -78,7 +78,7 @@ inline auto serialize(const WireOrderCancel& msg, std::byte* buf) -> size_t {
 }
 
 inline auto parse_order_cancel(const std::byte* buf) -> WireOrderCancel {
-  WireOrderCancel woc;
+  WireOrderCancel woc{};
   size_t offset = 0;
   std::memcpy(&woc.hdr, buf + offset, sizeof(woc.hdr));
   offset += sizeof(woc.hdr);
@@ -109,7 +109,7 @@ inline auto serialize(const WireAck& msg, std::byte* buf) -> size_t {
 }
 
 inline auto parse_ack(const std::byte* buf) -> WireAck {
-  WireAck wa;
+  WireAck wa{};
   size_t offset = 0;
   std::memcpy(&wa.hdr, buf + offset, sizeof(wa.hdr));
   offset += sizeof(wa.hdr);
@@ -147,7 +147,7 @@ inline auto serialize(const WireTrade& msg, std::byte* buf) -> size_t {
 }
 
 inline auto parse_trade(const std::byte* buf) -> WireTrade {
-  WireTrade wt;
+  WireTrade wt{};
   size_t offset = 0;
   std::memcpy(&wt.hdr, buf + offset, sizeof(wt.hdr));
   offset += sizeof(wt.hdr);
