@@ -10,8 +10,9 @@ class ServerSocket {
   int fd = -1;
 
  public:
-  explicit ServerSocket(uint16_t port = 8080) : fd(socket(AF_INET, SOCK_STREAM, 0)) {
-     // socket() failed if < 0
+  explicit ServerSocket(uint16_t port = 8080)
+      : fd(socket(AF_INET, SOCK_STREAM, 0)) {
+    // socket() failed if < 0
 
     int opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <

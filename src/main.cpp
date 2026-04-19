@@ -45,9 +45,10 @@ size_t ring_head = 0;
 
 inline void track_order(uint64_t id, uint64_t price, uint32_t qty) {
   TrackedOrder& slot = order_ring[ring_head];
-  if (slot.id != 0u) { (void)book.cancel_order(slot.id);
-}
-  slot = {.id=id, .price=price, .qty=qty};
+  if (slot.id != 0u) {
+    (void)book.cancel_order(slot.id);
+  }
+  slot = {.id = id, .price = price, .qty = qty};
   ring_head = (ring_head + 1) & RING_MASK;
 }
 
@@ -95,8 +96,9 @@ void do_cancel(XorShift64& rng) {
 
 void do_modify(XorShift64& rng, uint64_t mid, uint64_t spread) {
   TrackedOrder* target = get_random_target(rng);
-  if (target->id == 0u) { return;
-}
+  if (target->id == 0u) {
+    return;
+  }
 
   uint32_t r = fast_range32(rng.next(), 100);
   if (r < 60) {
@@ -135,16 +137,18 @@ void do_execute(XorShift64& rng) {
   uint32_t qty = 1 + fast_range32(rng.next(), 20);
 
   if ((rng.next() & 1) != 0u) {
-    const auto *best = book.get_best_ask();
-    if (best == nullptr) { return;
-}
+    const auto* best = book.get_best_ask();
+    if (best == nullptr) {
+      return;
+    }
     uint64_t exec_price = best->price + 2;
     (void)book.execute_order<Side::Buy>(id, exec_price, qty);
     track_order(id, exec_price, qty);
   } else {
-    const auto *best = book.get_best_bid();
-    if (best == nullptr) { return;
-}
+    const auto* best = book.get_best_bid();
+    if (best == nullptr) {
+      return;
+    }
     uint64_t exec_price = best->price > 2 ? best->price - 2 : 1;
     (void)book.execute_order<Side::Sell>(id, exec_price, qty);
     track_order(id, exec_price, qty);
@@ -154,8 +158,9 @@ void do_execute(XorShift64& rng) {
 void build_dispatch(uint8_t (&dispatch)[100], const uint8_t weights[5]) {
   uint8_t op = 0;
   for (int i = 0; i < 100; ++i) {
-    while (op < 4 && std::cmp_greater_equal(i , weights[op])) { ++op;
-}
+    while (op < 4 && std::cmp_greater_equal(i, weights[op])) {
+      ++op;
+    }
     dispatch[i] = op;
   }
 }
@@ -190,10 +195,12 @@ void run_phase(const char* name, size_t ops, const uint8_t dispatch[100],
 
         do_not_optimize(nb);
         do_not_optimize(na);
-        if (nb > 0) { do_not_optimize(bids[0]);
-}
-        if (na > 0) { do_not_optimize(asks[0]);
-}
+        if (nb > 0) {
+          do_not_optimize(bids[0]);
+        }
+        if (na > 0) {
+          do_not_optimize(asks[0]);
+        }
         break;
       }
     }
@@ -202,8 +209,9 @@ void run_phase(const char* name, size_t ops, const uint8_t dispatch[100],
       Trade trades[512];
       size_t n = book.drain_trades(trades, 512);
       total_trades_global += n;
-      if (n > 0) { do_not_optimize(trades[0]);
-}
+      if (n > 0) {
+        do_not_optimize(trades[0]);
+      }
     }
   }
 
@@ -251,18 +259,20 @@ auto main() -> int {
     total_trades_global += n;
   }
 
-  const auto *best_bid = book.get_best_bid();
-  const auto *best_ask = book.get_best_ask();
+  const auto* best_bid = book.get_best_bid();
+  const auto* best_ask = book.get_best_ask();
 
   std::cout << "\n--- Benchmark Complete ---\n";
   std::cout << "Total operations:  " << 50'500'000 << "\n";
   std::cout << "Total trades:      " << total_trades_global << "\n";
-  std::cout << "Final best bid:    " << ((best_bid != nullptr) ? best_bid->price : 0)
-            << "\n";
-  std::cout << "Final best ask:    " << ((best_ask != nullptr) ? best_ask->price : 0)
-            << "\n";
+  std::cout << "Final best bid:    "
+            << ((best_bid != nullptr) ? best_bid->price : 0) << "\n";
+  std::cout << "Final best ask:    "
+            << ((best_ask != nullptr) ? best_ask->price : 0) << "\n";
   std::cout << "Final Spread:      "
-            << ((best_ask != nullptr) && (best_bid != nullptr) ? (best_ask->price - best_bid->price) : 0)
+            << ((best_ask != nullptr) && (best_bid != nullptr)
+                    ? (best_ask->price - best_bid->price)
+                    : 0)
             << "\n";
 
   return 0;

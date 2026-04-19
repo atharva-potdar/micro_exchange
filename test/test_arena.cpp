@@ -38,7 +38,7 @@ TEST(Arena, CapacityAllocs) {
 TEST(Arena, ExhaustAndRecover) {
   Arena<Order, 10> order_pool;
   Order* orders[10];
-  for (auto & order : orders) {
+  for (auto& order : orders) {
     order = order_pool.allocate();
   }
 

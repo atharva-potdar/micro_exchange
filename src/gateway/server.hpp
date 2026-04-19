@@ -31,8 +31,9 @@ class Server {
     size_t sent = 0;
     while (sent < len) {
       ssize_t n = ServerSocket::send(fd, send_buf_ + sent, len - sent);
-      if (n <= 0) { return false;
-}
+      if (n <= 0) {
+        return false;
+      }
       sent += static_cast<size_t>(n);
     }
     return true;
@@ -49,7 +50,7 @@ class Server {
     } else {
       result =
           book_.template execute_order<Side::Sell>(msg.id, msg.price, msg.qty);
-}
+    }
 
     // Drain and send any trades that were generated.
     Trade trades[512];
@@ -63,8 +64,9 @@ class Server {
       wt.price = trades[i].price;
       wt.qty = trades[i].quantity;
       size_t len = serialize(wt, send_buf_);
-      if (!send_all(client_fd, len)) { return false;
-}
+      if (!send_all(client_fd, len)) {
+        return false;
+      }
     }
 
     // Send ack.
@@ -106,8 +108,9 @@ class Server {
 
     while (ok) {
       ssize_t n = ServerSocket::recv(client_fd, recv_buf_, kRecvBuf);
-      if (n <= 0) { break;  // 0 = clean disconnect, <0 = error
-}
+      if (n <= 0) {
+        break;  // 0 = clean disconnect, <0 = error
+      }
 
       framer.ingest(recv_buf_, static_cast<size_t>(n));
 
@@ -126,9 +129,9 @@ class Server {
   void run() {
     for (;;) {
       int client_fd = socket_.accept();
-      if (client_fd < 0) { [[unlikely]]
-        continue;
-}
+      if (client_fd < 0) {
+        [[unlikely]] continue;
+      }
       serve_client(client_fd);
       ::close(client_fd);
     }

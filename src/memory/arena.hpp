@@ -19,7 +19,6 @@ class Arena {
 
  public:
   Arena() : allocated(0) {
-    
     for (std::size_t i = 0; i < Capacity; i++) {
       T* slot = reinterpret_cast<T*>(&storage[i * sizeof(T)]);
       T* next = nullptr;
