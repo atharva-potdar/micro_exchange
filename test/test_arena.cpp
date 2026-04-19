@@ -38,8 +38,8 @@ TEST(Arena, CapacityAllocs) {
 TEST(Arena, ExhaustAndRecover) {
   Arena<Order, 10> order_pool;
   Order* orders[10];
-  for (int i = 0; i < 10; i++) {
-    orders[i] = order_pool.allocate();
+  for (auto & order : orders) {
+    order = order_pool.allocate();
   }
 
   ASSERT_EQ(order_pool.allocate(), nullptr);

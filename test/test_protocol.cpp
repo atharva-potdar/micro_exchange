@@ -5,7 +5,7 @@
 
 TEST(Protocol, WireOrderAddRoundTrip) {
   WireOrderAdd og;
-  og.hdr = {sizeof(WireOrderAdd), static_cast<uint8_t>(MessageType::OrderAdd)};
+  og.hdr = {.length=sizeof(WireOrderAdd), .type=static_cast<uint8_t>(MessageType::OrderAdd)};
   og.id = 42;
   og.price = 100500;
   og.qty = 25;
@@ -25,8 +25,8 @@ TEST(Protocol, WireOrderAddRoundTrip) {
 
 TEST(Protocol, WireOrderCancelRoundTrip) {
   WireOrderCancel og;
-  og.hdr = {sizeof(WireOrderCancel),
-            static_cast<uint8_t>(MessageType::OrderCancel)};
+  og.hdr = {.length=sizeof(WireOrderCancel),
+            .type=static_cast<uint8_t>(MessageType::OrderCancel)};
   og.id = 99;
   std::byte buf[sizeof(WireOrderCancel)];
   serialize(og, buf);
@@ -38,7 +38,7 @@ TEST(Protocol, WireOrderCancelRoundTrip) {
 
 TEST(Protocol, WireAckRoundTrip) {
   WireAck og;
-  og.hdr = {sizeof(WireAck), static_cast<uint8_t>(MessageType::Ack)};
+  og.hdr = {.length=sizeof(WireAck), .type=static_cast<uint8_t>(MessageType::Ack)};
   og.id = 42;
   og.status = 0x00;
   std::byte buf[sizeof(WireAck)];
@@ -52,7 +52,7 @@ TEST(Protocol, WireAckRoundTrip) {
 
 TEST(Protocol, WireTradeRoundTrip) {
   WireTrade og;
-  og.hdr = {sizeof(WireTrade), static_cast<uint8_t>(MessageType::Trade)};
+  og.hdr = {.length=sizeof(WireTrade), .type=static_cast<uint8_t>(MessageType::Trade)};
   og.buyer = 42;
   og.seller = 99;
   og.price = 100500;

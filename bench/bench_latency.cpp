@@ -1,15 +1,16 @@
-#include <time.h>
+#include <ctime>
 #include <x86intrin.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
+#include <print>
 #include <vector>
 
 #include "orderbook/orderbook.hpp"
 
-static double tsc_to_ns_factor() {
+static auto tsc_to_ns_factor() -> double {
   __rdtsc();
   struct timespec t0, t1;
   clock_gettime(CLOCK_MONOTONIC, &t0);
@@ -19,12 +20,12 @@ static double tsc_to_ns_factor() {
   uint64_t c1 = __rdtsc();
   clock_gettime(CLOCK_MONOTONIC, &t1);
   double ns =
-      (double)(t1.tv_sec - t0.tv_sec) * 1e9 + (double)(t1.tv_nsec - t0.tv_nsec);
-  double ticks = (double)(c1 - c0);
+      static_cast<double>(t1.tv_sec - t0.tv_sec) * 1e9 + static_cast<double>(t1.tv_nsec - t0.tv_nsec);
+  auto ticks = static_cast<double>(c1 - c0);
   return ns / ticks;
 }
 
-static uint64_t rdtsc_overhead() {
+static auto rdtsc_overhead() -> uint64_t {
   uint64_t min_overhead = UINT64_MAX;
   for (int i = 0; i < 1000; ++i) {
     uint64_t a = __rdtsc();
@@ -42,7 +43,7 @@ struct Stats {
 // Op signature: void op(bool& did_reset)
 // Set did_reset = true when a reset fires; that iteration is excluded.
 template <typename Op>
-Stats measure(Op&& op, size_t n_samples = 100'000, size_t warmup = 10'000) {
+auto measure(Op&& op, size_t n_samples = 100'000, size_t warmup = 10'000) -> Stats {
   static const double ns_per_tick = tsc_to_ns_factor();
   static const uint64_t overhead = rdtsc_overhead();
 
@@ -65,43 +66,43 @@ Stats measure(Op&& op, size_t n_samples = 100'000, size_t warmup = 10'000) {
     }
   }
 
-  std::sort(samples.begin(), samples.end());
+  std::ranges::sort(samples);
 
   auto pct = [&](double p) -> double {
-    size_t idx = (size_t)(p * (double)(n_samples - 1));
-    return (double)samples[idx] * ns_per_tick;
+    auto idx = static_cast<size_t>(p * static_cast<double>(n_samples - 1));
+    return static_cast<double>(samples[idx]) * ns_per_tick;
   };
 
   double sum = 0;
-  for (auto s : samples) sum += (double)s;
+  for (auto s : samples) sum += static_cast<double>(s);
 
   return {
-      .mean = (sum / (double)n_samples) * ns_per_tick,
+      .mean = (sum / static_cast<double>(n_samples)) * ns_per_tick,
       .p50 = pct(0.500),
       .p99 = pct(0.990),
       .p999 = pct(0.999),
       .p9999 = pct(0.9999),
-      .p100 = (double)samples.back() * ns_per_tick,
+      .p100 = static_cast<double>(samples.back()) * ns_per_tick,
   };
 }
 
 static void print_header() {
-  printf("\n%-42s %8s %8s %8s %8s %8s %8s\n", "Benchmark", "mean", "p50", "p99",
+  std::println("\n{:42} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}", "Benchmark", "mean", "p50", "p99",
          "p99.9", "p99.99", "max");
-  printf("%-42s %8s %8s %8s %8s %8s %8s\n",
+  std::println("{:42} {:>8} {:>8} {:>8} {:>8} {:>8} {:>8}",
          "──────────────────────────────────────────", "────────", "────────",
          "────────", "────────", "────────", "────────");
 }
 
 static void print_row(const char* name, const Stats& s) {
-  printf("%-42s %7.2f  %7.2f  %7.2f  %7.2f  %7.2f  %7.2f   (ns)\n", name,
+  std::println("{:42} {:7.2f}  {:7.2f}  {:7.2f}  {:7.2f}  {:7.2f}  {:7.2f}   (ns)", name,
          s.mean, s.p50, s.p99, s.p999, s.p9999, s.p100);
 }
 
-int main() {
-  printf("Micro-Exchange Latency Benchmarks\n");
-  printf("100,000 samples per benchmark, 10,000 warmup iterations\n");
-  printf("Reset iterations excluded from all sample sets.\n");
+auto main() -> int {
+  std::println("Micro-Exchange Latency Benchmarks");
+  std::println("100,000 samples per benchmark, 10,000 warmup iterations");
+  std::println("Reset iterations excluded from all sample sets.");
   print_header();
 
   {
@@ -110,7 +111,7 @@ int main() {
     uint64_t id = 2;
     constexpr uint64_t RESET_AT = 2000;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (id > RESET_AT) [[unlikely]] {
         for (uint64_t j = 2; j <= RESET_AT; ++j) book.cancel_order(j);
         id = 2;
@@ -129,7 +130,7 @@ int main() {
     uint64_t id = 1;
     uint64_t price = 50000;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (id > 1000 || price == 0) [[unlikely]] {
         book = std::make_unique<OrderBook<4096, 1024>>();
         id = 1;
@@ -149,7 +150,7 @@ int main() {
     uint64_t id = 1;
     uint64_t price = 1;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (id > 1000) [[unlikely]] {
         book = std::make_unique<OrderBook<4096, 1024>>();
         id = 1;
@@ -170,7 +171,7 @@ int main() {
     for (uint64_t i = 1; i <= 3000; ++i) book.add_order<Side::Buy>(i, 100, 10);
     uint64_t id = 1;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (id > 2000) [[unlikely]] {
         for (uint64_t j = 1; j <= 2000; ++j)
           book.add_order<Side::Buy>(j, 100, 10);
@@ -188,7 +189,7 @@ int main() {
   {
     auto book = std::make_unique<OrderBook<4096, 1024>>();
     constexpr uint64_t N = 500;
-    auto setup = [&] {
+    auto setup = [&] -> void {
       book = std::make_unique<OrderBook<4096, 1024>>();
       for (uint64_t i = 1; i <= N; ++i)
         book->add_order<Side::Buy>(i, i * 10, 10);
@@ -196,7 +197,7 @@ int main() {
     setup();
     uint64_t id = 1;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (id > N) [[unlikely]] {
         setup();
         id = 1;
@@ -214,7 +215,7 @@ int main() {
     book.add_order<Side::Buy>(1, 100, 1'000'000);
     uint32_t qty = 1'000'000;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (qty <= 1) [[unlikely]] {
         book.cancel_order(1);
         qty = 1'000'000;
@@ -235,7 +236,7 @@ int main() {
     book.add_order<Side::Buy>(1, 100, 10);
     uint64_t price = 100;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       (void)reset;
       price = (price == 100) ? 99 : 100;
       auto r = book.modify_order(1, price, 10);
@@ -250,7 +251,7 @@ int main() {
     uint64_t aggressor_id = 2;
     uint32_t fills = 0;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (fills >= 400) [[unlikely]] {
         book = std::make_unique<OrderBook<4096, 1024>>();
         book->add_order<Side::Sell>(1, 100, 1'000'000);
@@ -274,7 +275,7 @@ int main() {
   {
     auto book = std::make_unique<OrderBook<4096, 1024>>();
     constexpr uint32_t N = 500;
-    auto setup = [&] {
+    auto setup = [&] -> void {
       book = std::make_unique<OrderBook<4096, 1024>>();
       for (uint32_t i = 0; i < N; ++i)
         book->add_order<Side::Sell>(i + 1, 100 + i, 10);
@@ -283,7 +284,7 @@ int main() {
     uint64_t aggressor_id = 10000;
     uint32_t remaining = N;
 
-    auto s = measure([&](bool& reset) {
+    auto s = measure([&](bool& reset) -> void {
       if (remaining == 0) [[unlikely]] {
         setup();
         remaining = N;
@@ -299,7 +300,7 @@ int main() {
     print_row("execute_order (full fill + level GC)", s);
   }
 
-  printf("\nNote: max is a single-sample outlier — ignore it.\n");
-  printf("p99.9 is the reliable worst-case figure for resume/docs.\n");
+  std::println("\nNote: max is a single-sample outlier — ignore it.");
+  std::println("p99.9 is the reliable worst-case figure for resume/docs.");
   return 0;
 }

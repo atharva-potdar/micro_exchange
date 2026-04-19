@@ -26,8 +26,8 @@ class OrderBook {
   static constexpr size_t kLinearScanThreshold = 16;
 
   template <Side S>
-  [[nodiscard]] std::pair<PriceLevel*, size_t> find_level_or_pos(
-      uint64_t price) const {
+  [[nodiscard]] auto find_level_or_pos(
+      uint64_t price) const -> std::pair<PriceLevel*, size_t> {
     const auto& levels = (S == Side::Buy) ? bid_levels : ask_levels;
     const size_t count = (S == Side::Buy) ? bid_count : ask_count;
 
@@ -101,12 +101,12 @@ class OrderBook {
 
  public:
   template <Side S>
-  [[nodiscard]] size_t get_level_count() const {
+  [[nodiscard]] auto get_level_count() const -> size_t {
     return (S == Side::Buy) ? bid_count : ask_count;
   }
 
   template <Side S>
-  [[nodiscard]] const PriceLevel* get_level(size_t index) const {
+  [[nodiscard]] auto get_level(size_t index) const -> const PriceLevel* {
     const size_t count = (S == Side::Buy) ? bid_count : ask_count;
     const auto& levels = (S == Side::Buy) ? bid_levels : ask_levels;
     if (index >= count) [[unlikely]]
@@ -114,22 +114,22 @@ class OrderBook {
     return levels[index];
   }
 
-  [[nodiscard]] const Order* get_order(uint64_t id) const {
+  [[nodiscard]] auto get_order(uint64_t id) const -> const Order* {
     if (id >= MAX_ORDERS) [[unlikely]]
       return nullptr;
     return order_lookup[id];
   }
 
-  [[nodiscard]] size_t get_active_order_count() const {
+  [[nodiscard]] auto get_active_order_count() const -> size_t {
     return order_pool.size();
   }
 
-  [[nodiscard]] size_t get_active_level_count() const {
+  [[nodiscard]] auto get_active_level_count() const -> size_t {
     return level_pool.size();
   }
 
   template <Side S>
-  PriceLevel* find_or_create_level(uint64_t price) {
+  auto find_or_create_level(uint64_t price) -> PriceLevel* {
     auto& levels = (S == Side::Buy) ? bid_levels : ask_levels;
     auto& count = (S == Side::Buy) ? bid_count : ask_count;
 
@@ -153,8 +153,8 @@ class OrderBook {
   }
 
   template <Side S>
-  std::expected<void, Error> add_order(uint64_t id, uint64_t price,
-                                       uint32_t quantity) {
+  auto add_order(uint64_t id, uint64_t price,
+                                       uint32_t quantity) -> std::expected<void, Error> {
     if (id >= MAX_ORDERS) [[unlikely]]
       return std::unexpected(Error::InvalidOrderId);
     if (order_lookup[id] != nullptr) [[unlikely]]
@@ -175,7 +175,7 @@ class OrderBook {
     return {};
   }
 
-  std::expected<void, Error> cancel_order(uint64_t id) {
+  auto cancel_order(uint64_t id) -> std::expected<void, Error> {
     if (id >= MAX_ORDERS || order_lookup[id] == nullptr) [[unlikely]]
       return std::unexpected(Error::InvalidOrderId);
     Order* o = order_lookup[id];
@@ -186,8 +186,8 @@ class OrderBook {
     return {};
   }
 
-  std::expected<void, Error> modify_order(uint64_t id, uint64_t new_price,
-                                          uint32_t new_quantity) {
+  auto modify_order(uint64_t id, uint64_t new_price,
+                                          uint32_t new_quantity) -> std::expected<void, Error> {
     if (id >= MAX_ORDERS || order_lookup[id] == nullptr) [[unlikely]]
       return std::unexpected(Error::InvalidOrderId);
     if (new_quantity == 0) [[unlikely]]
@@ -212,8 +212,8 @@ class OrderBook {
   }
 
   template <Side S>
-  uint32_t match(uint64_t incoming_id, uint64_t incoming_price,
-                 uint32_t incoming_qty) {
+  auto match(uint64_t incoming_id, uint64_t incoming_price,
+                 uint32_t incoming_qty) -> uint32_t {
     auto& levels = (S == Side::Buy) ? ask_levels : bid_levels;
     auto& count = (S == Side::Buy) ? ask_count : bid_count;
 
@@ -231,8 +231,8 @@ class OrderBook {
       while (resting != nullptr && incoming_qty > 0) {
         uint32_t trade_qty = std::min(incoming_qty, resting->quantity);
         if (trade_count < trade_buffer.size()) [[likely]] {
-          trade_buffer[trade_count++] = {incoming_id, resting->id, best_price,
-                                         trade_qty};
+          trade_buffer[trade_count++] = {.buyer_order_id=incoming_id, .seller_order_id=resting->id, .price=best_price,
+                                         .quantity=trade_qty};
         }
         incoming_qty -= trade_qty;
         resting->quantity -= trade_qty;
@@ -260,8 +260,8 @@ class OrderBook {
   }
 
   template <Side S>
-  std::expected<void, Error> execute_order(uint64_t id, uint64_t price,
-                                           uint32_t quantity) {
+  auto execute_order(uint64_t id, uint64_t price,
+                                           uint32_t quantity) -> std::expected<void, Error> {
     if (id >= MAX_ORDERS) [[unlikely]]
       return std::unexpected(Error::InvalidOrderId);
     if (order_lookup[id] != nullptr) [[unlikely]]
@@ -271,20 +271,20 @@ class OrderBook {
     return {};
   }
 
-  [[nodiscard]] const PriceLevel* get_best_bid() const {
+  [[nodiscard]] auto get_best_bid() const -> const PriceLevel* {
     if (bid_count == 0) [[unlikely]]
       return nullptr;
     return bid_levels[0];
   }
 
-  [[nodiscard]] const PriceLevel* get_best_ask() const {
+  [[nodiscard]] auto get_best_ask() const -> const PriceLevel* {
     if (ask_count == 0) [[unlikely]]
       return nullptr;
     return ask_levels[0];
   }
 
   template <Side S>
-  size_t get_l2_snapshot(LevelInfo* out_buffer, size_t max_depth) const {
+  auto get_l2_snapshot(LevelInfo* out_buffer, size_t max_depth) const -> size_t {
     const auto& levels = (S == Side::Buy) ? bid_levels : ask_levels;
     const size_t count = (S == Side::Buy) ? bid_count : ask_count;
     size_t depth = std::min(max_depth, count);
@@ -293,12 +293,12 @@ class OrderBook {
     return depth;
   }
 
-  size_t drain_trades(Trade* out, size_t max) {
+  auto drain_trades(Trade* out, size_t max) -> size_t {
     size_t n = std::min(trade_count, max);
     std::memcpy(out, trade_buffer.data(), n * sizeof(Trade));
     trade_count = 0;
     return n;
   }
 
-  [[nodiscard]] size_t get_trade_count() const { return trade_count; }
+  [[nodiscard]] auto get_trade_count() const -> size_t { return trade_count; }
 };

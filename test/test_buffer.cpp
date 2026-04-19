@@ -1,13 +1,15 @@
 #include <gtest/gtest.h>
 
+#include <algorithm>
+
 #include "gateway/buffer.hpp"
 
 TEST(Buffer, WriteReadWritePositionVerification) {
   Buffer buf;
   std::array<std::byte, 100> data100{};
   std::array<std::byte, 60> data60{};
-  std::fill(data100.begin(), data100.end(), std::byte{0xAB});
-  std::fill(data60.begin(), data60.end(), std::byte{0xCD});
+  std::ranges::fill(data100, std::byte{0xAB});
+  std::ranges::fill(data60, std::byte{0xCD});
 
   buf.write(data100.data(), 100);
   EXPECT_EQ(buf.readable(), 100);

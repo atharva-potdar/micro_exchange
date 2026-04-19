@@ -15,9 +15,9 @@ class Buffer {
     write_pos += len;
   }
 
-  size_t readable() const { return write_pos - read_pos; }
+  [[nodiscard]] auto readable() const -> size_t { return write_pos - read_pos; }
 
-  const std::byte* read_ptr() const { return data.data() + read_pos; }
+  [[nodiscard]] auto read_ptr() const -> const std::byte* { return data.data() + read_pos; }
 
   void consume(size_t len) {
     read_pos += len;

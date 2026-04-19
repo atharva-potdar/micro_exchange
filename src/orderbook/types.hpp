@@ -44,9 +44,9 @@ struct PriceLevel {
   uint32_t order_count = 0;
   uint64_t total_quantity = 0;
 
-  [[nodiscard]] bool empty() const { return head == nullptr; }
+  [[nodiscard]] auto empty() const -> bool { return head == nullptr; }
 
-  [[nodiscard]] Order* front() const { return head; }
+  [[nodiscard]] auto front() const -> Order* { return head; }
 
   void push_back(Order* o) {
     assert(o != nullptr && "Cannot push a null order");

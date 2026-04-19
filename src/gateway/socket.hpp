@@ -39,7 +39,7 @@ class ServerSocket {
     }
   }
 
-  int accept() {
+  auto accept() -> int {
     int client_fd = ::accept(fd, nullptr, nullptr);  // accept() failed if < 0
 
     int nodelay = 1;
@@ -50,10 +50,10 @@ class ServerSocket {
 
     return client_fd;
   }
-  static ssize_t recv(int fd, void* buf, size_t max) {
+  static auto recv(int fd, void* buf, size_t max) -> ssize_t {
     return ::recv(fd, buf, max, 0);
   }
-  static ssize_t send(int fd, const void* buf, size_t len) {
+  static auto send(int fd, const void* buf, size_t len) -> ssize_t {
     return ::send(fd, buf, len, 0);
   }
 };

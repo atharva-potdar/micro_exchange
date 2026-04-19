@@ -27,7 +27,7 @@ class Server {
 
   // Sends exactly `len` bytes, retrying on short writes.
   // Returns false if the connection is lost.
-  [[nodiscard]] bool send_all(int fd, size_t len) {
+  [[nodiscard]] auto send_all(int fd, size_t len) -> bool {
     size_t sent = 0;
     while (sent < len) {
       ssize_t n = ServerSocket::send(fd, send_buf_ + sent, len - sent);
@@ -37,7 +37,7 @@ class Server {
     return true;
   }
 
-  bool handle_order_add(int client_fd, const WireOrderAdd& msg) {
+  auto handle_order_add(int client_fd, const WireOrderAdd& msg) -> bool {
     Side side = (msg.side == 0) ? Side::Buy : Side::Sell;
 
     // Attempt to execute (match then rest).
@@ -74,7 +74,7 @@ class Server {
     return send_all(client_fd, len);
   }
 
-  bool handle_order_cancel(int client_fd, const WireOrderCancel& msg) {
+  auto handle_order_cancel(int client_fd, const WireOrderCancel& msg) -> bool {
     auto result = book_.cancel_order(msg.id);
 
     WireAck ack{};
@@ -92,7 +92,7 @@ class Server {
 
     // A handler that dispatches parsed messages and writes responses.
     bool ok = true;
-    auto dispatch = [&](auto& msg) {
+    auto dispatch = [&](auto& msg) -> auto {
       using T = std::decay_t<decltype(msg)>;
       if constexpr (std::is_same_v<T, WireOrderAdd>) {
         ok = handle_order_add(client_fd, msg);

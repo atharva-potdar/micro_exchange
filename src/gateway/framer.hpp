@@ -13,7 +13,7 @@ class Framer {
   void ingest(const std::byte* data, size_t len) { buffer.write(data, len); }
 
   template <typename Handler>
-  bool try_parse_one(Handler& handler) {
+  auto try_parse_one(Handler& handler) -> bool {
     if (buffer.readable() < sizeof(WireHeader)) [[unlikely]] {
       return false;
     }

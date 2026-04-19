@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "orderbook/orderbook.hpp"
 
@@ -14,7 +15,7 @@ __attribute__((always_inline)) inline void do_not_optimize(T const& val) {
 struct XorShift64 {
   uint64_t s;
   constexpr explicit XorShift64(uint64_t seed) : s{seed == 0 ? 1 : seed} {}
-  inline uint64_t next() {
+  inline auto next() -> uint64_t {
     s ^= s << 13;
     s ^= s >> 7;
     s ^= s << 17;
@@ -22,7 +23,7 @@ struct XorShift64 {
   }
 };
 
-inline uint32_t fast_range32(uint64_t random_val, uint32_t range) {
+inline auto fast_range32(uint64_t random_val, uint32_t range) -> uint32_t {
   return static_cast<uint32_t>(
       (static_cast<uint64_t>(static_cast<uint32_t>(random_val)) * range) >> 32);
 }
@@ -45,18 +46,18 @@ size_t ring_head = 0;
 inline void track_order(uint64_t id, uint64_t price, uint32_t qty) {
   TrackedOrder& slot = order_ring[ring_head];
   if (slot.id) (void)book.cancel_order(slot.id);
-  slot = {id, price, qty};
+  slot = {.id=id, .price=price, .qty=qty};
   ring_head = (ring_head + 1) & RING_MASK;
 }
 
-inline TrackedOrder* get_random_target(XorShift64& rng) {
+inline auto get_random_target(XorShift64& rng) -> TrackedOrder* {
   uint32_t idx = static_cast<uint32_t>(rng.next()) & RING_MASK;
   return &order_ring[idx];
 }
 
 uint64_t next_id = 1;
 
-inline uint64_t alloc_id() {
+inline auto alloc_id() -> uint64_t {
   uint64_t id = next_id++;
   if (next_id >= MAX_ORDERS) {
     next_id = 1;
@@ -68,7 +69,7 @@ void do_add(XorShift64& rng, uint64_t mid, uint64_t spread) {
   uint64_t id = alloc_id();
   uint32_t qty = 1 + fast_range32(rng.next(), 100);
 
-  uint32_t half_spread = static_cast<uint32_t>(spread / 2);
+  auto half_spread = static_cast<uint32_t>(spread / 2);
   uint32_t offset = fast_range32(rng.next(), half_spread) +
                     fast_range32(rng.next(), half_spread);
   uint64_t price;
@@ -110,7 +111,7 @@ void do_modify(XorShift64& rng, uint64_t mid, uint64_t spread) {
     }
   } else {
     // SLOW path: change price
-    uint32_t half_spread = static_cast<uint32_t>(spread / 2);
+    auto half_spread = static_cast<uint32_t>(spread / 2);
     uint32_t offset = fast_range32(rng.next(), half_spread) +
                       fast_range32(rng.next(), half_spread);
     uint64_t new_price;
@@ -149,7 +150,7 @@ void do_execute(XorShift64& rng) {
 void build_dispatch(uint8_t (&dispatch)[100], const uint8_t weights[5]) {
   uint8_t op = 0;
   for (int i = 0; i < 100; ++i) {
-    while (op < 4 && i >= weights[op]) ++op;
+    while (op < 4 && std::cmp_greater_equal(i , weights[op])) ++op;
     dispatch[i] = op;
   }
 }
@@ -206,7 +207,7 @@ void run_phase(const char* name, size_t ops, const uint8_t dispatch[100],
             << " M ops/s\n";
 }
 
-int main() {
+auto main() -> int {
   std::cout << "=================================================\n";
   std::cout << "   Micro-Exchange Perf Workload Generator\n";
   std::cout << "=================================================\n";

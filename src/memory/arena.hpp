@@ -34,7 +34,7 @@ class Arena {
   }
 
   template <typename... Args>
-  [[nodiscard]] T* allocate(Args&&... args) {
+  [[nodiscard]] auto allocate(Args&&... args) -> T* {
     if (free_head == nullptr) {
       return nullptr;
     }
@@ -49,7 +49,7 @@ class Arena {
       return;
     }
 
-    [[maybe_unused]] std::byte* byte_ptr = reinterpret_cast<std::byte*>(ptr);
+    [[maybe_unused]] auto* byte_ptr = reinterpret_cast<std::byte*>(ptr);
     assert(byte_ptr >= storage && byte_ptr < storage + (Capacity * sizeof(T)) &&
            "Pointer does not belong to this Arena");
     assert(static_cast<size_t>(byte_ptr - storage) % sizeof(T) == 0 &&
@@ -62,7 +62,7 @@ class Arena {
     allocated--;
   }
 
-  [[nodiscard]] size_t size() const { return allocated; }
+  [[nodiscard]] auto size() const -> size_t { return allocated; }
 
-  [[nodiscard]] size_t capacity() const { return Capacity; }
+  [[nodiscard]] auto capacity() const -> size_t { return Capacity; }
 };

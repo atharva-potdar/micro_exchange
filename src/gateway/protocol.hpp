@@ -27,7 +27,7 @@ struct WireOrderAdd {
 
 } __attribute__((packed));
 
-inline size_t serialize(const WireOrderAdd& msg, std::byte* buf) {
+inline auto serialize(const WireOrderAdd& msg, std::byte* buf) -> size_t {
   size_t offset = 0;
   std::memcpy(buf + offset, &msg.hdr, sizeof(msg.hdr));
   offset += sizeof(msg.hdr);
@@ -43,7 +43,7 @@ inline size_t serialize(const WireOrderAdd& msg, std::byte* buf) {
   return offset;
 }
 
-inline WireOrderAdd parse_order_add(const std::byte* buf) {
+inline auto parse_order_add(const std::byte* buf) -> WireOrderAdd {
   WireOrderAdd woa;
   size_t offset = 0;
   std::memcpy(&woa.hdr, buf + offset, sizeof(woa.hdr));
@@ -67,7 +67,7 @@ struct WireOrderCancel {
   uint64_t id;
 } __attribute__((packed));
 
-inline size_t serialize(const WireOrderCancel& msg, std::byte* buf) {
+inline auto serialize(const WireOrderCancel& msg, std::byte* buf) -> size_t {
   size_t offset = 0;
   std::memcpy(buf + offset, &msg.hdr, sizeof(msg.hdr));
   offset += sizeof(msg.hdr);
@@ -77,7 +77,7 @@ inline size_t serialize(const WireOrderCancel& msg, std::byte* buf) {
   return offset;
 }
 
-inline WireOrderCancel parse_order_cancel(const std::byte* buf) {
+inline auto parse_order_cancel(const std::byte* buf) -> WireOrderCancel {
   WireOrderCancel woc;
   size_t offset = 0;
   std::memcpy(&woc.hdr, buf + offset, sizeof(woc.hdr));
@@ -96,7 +96,7 @@ struct WireAck {
   uint8_t status;
 } __attribute__((packed));
 
-inline size_t serialize(const WireAck& msg, std::byte* buf) {
+inline auto serialize(const WireAck& msg, std::byte* buf) -> size_t {
   size_t offset = 0;
   std::memcpy(buf + offset, &msg.hdr, sizeof(msg.hdr));
   offset += sizeof(msg.hdr);
@@ -108,7 +108,7 @@ inline size_t serialize(const WireAck& msg, std::byte* buf) {
   return offset;
 }
 
-inline WireAck parse_ack(const std::byte* buf) {
+inline auto parse_ack(const std::byte* buf) -> WireAck {
   WireAck wa;
   size_t offset = 0;
   std::memcpy(&wa.hdr, buf + offset, sizeof(wa.hdr));
@@ -131,7 +131,7 @@ struct WireTrade {
   uint32_t qty;
 } __attribute__((packed));
 
-inline size_t serialize(const WireTrade& msg, std::byte* buf) {
+inline auto serialize(const WireTrade& msg, std::byte* buf) -> size_t {
   size_t offset = 0;
   std::memcpy(buf + offset, &msg.hdr, sizeof(msg.hdr));
   offset += sizeof(msg.hdr);
@@ -146,7 +146,7 @@ inline size_t serialize(const WireTrade& msg, std::byte* buf) {
   return offset;
 }
 
-inline WireTrade parse_trade(const std::byte* buf) {
+inline auto parse_trade(const std::byte* buf) -> WireTrade {
   WireTrade wt;
   size_t offset = 0;
   std::memcpy(&wt.hdr, buf + offset, sizeof(wt.hdr));
