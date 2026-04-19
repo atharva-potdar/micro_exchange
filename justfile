@@ -38,3 +38,27 @@ profile-perf: build-release
         -e stalled-cycles-frontend,stalled-cycles-backend \
         taskset -c 2 chrt -f 99 \
         ./build/release/micro_exchange
+
+tidy-modernize:
+    clang-tidy -p build/debug --header-filter='src/.*' --checks='-*,modernize-*' --fix src/**/*.hpp src/*.cpp test/*.cpp bench/*.cpp
+    just test
+
+tidy-cppcoreguidelines:
+    clang-tidy -p build/debug --header-filter='src/.*' --checks='-*,cppcoreguidelines-*' --fix src/**/*.hpp src/*.cpp test/*.cpp bench/*.cpp
+    just test
+
+tidy-readability:
+    clang-tidy -p build/debug --header-filter='src/.*' --checks='-*,readability-*' --fix src/**/*.hpp src/*.cpp test/*.cpp bench/*.cpp
+    just test
+
+tidy-performance:
+    clang-tidy -p build/debug --header-filter='src/.*' --checks='-*,performance-*' --fix src/**/*.hpp src/*.cpp test/*.cpp bench/*.cpp
+    just test
+
+format:
+    clang-format -i src/**/*.hpp src/*.cpp test/*.cpp bench/*.cpp
+    just test
+
+tidy-all: tidy-modernize tidy-cppcoreguidelines tidy-readability tidy-performance format
+
+
